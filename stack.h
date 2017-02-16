@@ -2,113 +2,132 @@
 #define STACK_H
 
 #include <iostream>
+#include <deque>
+#define out_of_range -1
 
-template <typename StackType>
-class Stack;
-
-template <typename StackType>
-std::ostream& operator <<(std::ostream &os, const Stack<StackType>& stk)
-{
-    for(int i = 0; i < stk.top_; i++)
-    {
-        os << stk.data_[i] << ' ';
-    }
-    return os;
-}
-
-template <typename StackType>
+template <class Type, class Container = std::deque<Type>>
 class Stack
 {
 private:
-    StackType *data_;
-    int top_;
-    int size_;
-    inline bool isempty();
-    inline bool isfull();
+    Container *data_;
+    std::size_t top_;
+    std::size_t size_;
 public:
-    Stack(int stack_size)
-    {
-        size_ = stack_size;
-        data_ = new StackType[size_];
-        top_ = 0;
-    }
+    explicit Stack(std::size_t size):data_(new Container(size)), top_(0), size_(size){}
+    explicit Stack(const Container& cont = Container());
+    Stack(const Stack& other);
+    Stack& operator =(const Stack& other);
+
     ~Stack()
     {
-        delete[]data_;
+        delete data_;
     }
 
-    void push(StackType);
-    StackType  pop();
-    StackType  peek();
+    void push(Type);
+    Type pop();
+    Type peek();
 
-    friend std::ostream& operator<<<>(std::ostream &os, const Stack& stk);
+    std::size_t size();
+    bool full();
+    bool empty();
 };
 
-
-
-template <typename StackType>
-bool Stack<StackType>::isfull()
+template <class Type, class Container>
+Stack<Type, Container>::Stack(const Container& cont)
 {
-    if(top_ == size_)
-        return 1;
-    else
-        return 0;
-}
-template <typename StackType>
-bool Stack<StackType>::isempty()
-{
-    if(top_ == 0)
-        return 1;
-    else
-        return 0;
+    data_ = new Container(cont);
+    top_ = cont.size();
+    size_ = top_;
 }
 
-
-
-template <typename StackType>
-StackType Stack<StackType>::pop()
+template <class Type, class Container>
+Stack<Type, Container>::Stack(const Stack& other)
 {
-    if(!isempty())
-    {
-        top_--;
-        return data_[top_];
-    }
-    else
-    {
-        std::cerr << "Stack is empty";
-        return 0;
-    }
+    data_ = new Container(*(other.data_));
+    top_ = other.top_;
+    size_ = other.size_;
 }
-template <typename StackType>
-StackType Stack<StackType>::peek()
+
+template <class Type, class Container>
+Stack<Type, Container>& Stack<Type, Container>::operator =(const Stack& other)
 {
-    if(!isempty())
+    if(&other != this)
     {
-        return data_[top_];
+        delete data_;
+        data_ = new Container(*(other.data_));
+        top_ = other.top_;
+        size_ = other.size_;
     }
-    else
-    {
-        std::cerr << "Stack is empty";
-        return (StackType)0;
-    }
+    return *this;
+}
+
+template <class Type, class Container>
+std::size_t Stack<Type, Container>::size()
+{
+    return top_;
+}
+
+template <class Type, class Container>
+bool Stack<Type, Container>::full()
+{
+    return(top_ == size_);
+}
+
+template <class Type, class Container>
+bool Stack<Type, Container>::empty()
+{
+    return(top_ == 0);
 }
 
 
-
-template <typename StackType>
-void Stack<StackType>::push(StackType element)
+template <class Type, class Container>
+void Stack<Type, Container>::push(Type element)
 {
-    if(!isfull())
+    try
     {
-        data_[top_] = element;
+        if(top_ == size_)
+            throw out_of_range;
+        (*data_)[top_] = element;
         top_++;
     }
-    else
+    catch(int)
     {
         std::cerr << "Stack is full";
     }
 }
 
+template <class Type, class Container>
+Type Stack<Type, Container>::pop()
+{
+    try
+    {
+        if(empty())
+            throw out_of_range;
+        --top_;
+        return (*data_)[top_];
+    }
+    catch(int)
+    {
+        std::cerr << "Stack is empty";
+        return Type();
+    }
+}
+
+template <class Type, class Container>
+Type Stack<Type, Container>::peek()
+{
+    try
+    {
+        if(empty())
+            throw out_of_range;
+        return (*data_)[top_];
+    }
+    catch(int)
+    {
+        std::cerr << "Stack is empty";
+        return Type();
+    }
+}
 
 #endif // STACK_H
 
